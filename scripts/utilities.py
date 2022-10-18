@@ -7,6 +7,9 @@ import pandas as pd
 
 from typing import Union
 
+import datetime
+
+
 # Globals
 DATA_PATH = '../data'
 
@@ -105,8 +108,18 @@ def clean_listings(df_listings:pd.DataFrame)->pd.DataFrame:
     """
     df_listings_cleaned = df_listings.replace(to_replace={'t':1, 'f':0}, inplace=True) #binarize t/f
 
+    # bathroom mappings
     bathroom_mappings = parse_bathrooms(dataframe=df_listings["bathrooms_text"])
     df_listings_cleaned["bathrooms"] = df_listings_cleaned["bathrooms"].replace(to_replace=bathroom_mappings, inplace=True)
+
+    #cleaning in the "reviews" areas:
+    df_listings_cleaned["reviews_per_month"] = df_listings_cleaned["reviews_per_month"].replace(to_replace="nan", value=0.0)
+
+    #reviews features
+    df_listings_cleaned["review_age"] = df_listings_cleaned["last_review"].apply(lambda x:_age_days(x))
+
+    #licenses
+    df_listings_cleaned = df_listings_cleaned.drop(columns="license")
 
     return df_listings_cleaned
 
@@ -149,3 +162,19 @@ def parse_bathrooms(dataframe:Union[pd.DataFrame,pd.Series], verbose=False)->dic
             pass
 
     return bathrooms
+
+def _age_days(input_date, date_format="%Y-%m-%d") -> int:
+    """calculate age in days (from today) from format
+
+    Args:
+        x (_type_): _description_
+
+    Returns:
+        int: number of days delta, -1 if date is not in past or date was NaN
+    """
+    try:
+        age = datetime.datetime.today() - datetime.datetime.strptime(input_date, date_format)
+        age = age.days
+    except TypeError:
+        age = -1
+    return age
