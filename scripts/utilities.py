@@ -111,7 +111,7 @@ def clean_listings(df_listings:pd.DataFrame)->pd.DataFrame:
 
     # bathroom mappings
     bathroom_mappings = parse_bathrooms(dataframe=df_listings["bathrooms_text"])
-    df_listings_cleaned["bathrooms"] = df_listings_cleaned["bathrooms"].replace(to_replace=bathroom_mappings)
+    df_listings_cleaned["bathrooms"] = df_listings_cleaned["bathrooms_text"].replace(to_replace=bathroom_mappings)
 
     #price to float
     df_listings_cleaned["price"] = df_listings_cleaned["price"].apply(_price_to_float)
