@@ -106,11 +106,15 @@ def clean_listings(df_listings:pd.DataFrame)->pd.DataFrame:
     Returns:
         pd.DataFrame: cleaned listings dataframe
     """
-    df_listings_cleaned = df_listings.replace(to_replace={'t':1, 'f':0}, inplace=True) #binarize t/f
+    df_listings_cleaned = df_listings
+    df_listings_cleaned = df_listings_cleaned.replace(to_replace={'t':1, 'f':0}) #binarize t/f
 
     # bathroom mappings
     bathroom_mappings = parse_bathrooms(dataframe=df_listings["bathrooms_text"])
-    df_listings_cleaned["bathrooms"] = df_listings_cleaned["bathrooms"].replace(to_replace=bathroom_mappings, inplace=True)
+    df_listings_cleaned["bathrooms"] = df_listings_cleaned["bathrooms"].replace(to_replace=bathroom_mappings)
+
+    #price to float
+    df_listings_cleaned["price"] = df_listings_cleaned["price"].apply(_price_to_float)
 
     #cleaning in the "reviews" areas:
     df_listings_cleaned["reviews_per_month"] = df_listings_cleaned["reviews_per_month"].replace(to_replace="nan", value=0.0)
@@ -178,3 +182,18 @@ def _age_days(input_date, date_format="%Y-%m-%d") -> int:
     except TypeError:
         age = -1
     return age
+
+def _price_to_float(input_string:str, currency:str="$") -> float:
+    """utility to convert the price string to a float
+    drops the currency symbol(default dollar-sign), spaces, and comma.
+    Args:
+        input_string (str): string representing the price
+
+    Returns:
+        float: price
+    """
+    input_string = input_string.replace(currency,'').replace(' ','').replace(',','')
+
+    return float(input_string)
+
+
