@@ -109,15 +109,20 @@ def clean_listings(df_listings:pd.DataFrame)->pd.DataFrame:
     df_listings_cleaned = df_listings
     df_listings_cleaned = df_listings_cleaned.replace(to_replace={'t':1, 'f':0}) #binarize t/f
 
+    # bedroom mappings
+    df_listings_cleaned["bedrooms"] = df_listings_cleaned["bedrooms"].fillna(value=0.0)
+    df_listings_cleaned["bedrooms"] = df_listings_cleaned["bedrooms"].replace(to_replace=["nan","NaN"], value=0.0) #just in case they were actually strings
+
     # bathroom mappings
-    bathroom_mappings = parse_bathrooms(dataframe=df_listings["bathrooms_text"])
+    bathroom_mappings = _parse_bathrooms(dataframe=df_listings["bathrooms_text"])
     df_listings_cleaned["bathrooms"] = df_listings_cleaned["bathrooms_text"].replace(to_replace=bathroom_mappings)
 
     #price to float
     df_listings_cleaned["price"] = df_listings_cleaned["price"].apply(_price_to_float)
 
     #cleaning in the "reviews" areas:
-    df_listings_cleaned["reviews_per_month"] = df_listings_cleaned["reviews_per_month"].replace(to_replace="nan", value=0.0)
+    df_listings_cleaned["reviews_per_month"] = df_listings_cleaned["reviews_per_month"].fillna(value=0.0)
+    df_listings_cleaned["reviews_per_month"] = df_listings_cleaned["reviews_per_month"].replace(to_replace=["nan","NaN"], value=0.0)
 
     #reviews features
     df_listings_cleaned["review_age"] = df_listings_cleaned["last_review"].apply(lambda x:_age_days(x))
@@ -127,7 +132,7 @@ def clean_listings(df_listings:pd.DataFrame)->pd.DataFrame:
 
     return df_listings_cleaned
 
-def parse_bathrooms(dataframe:Union[pd.DataFrame,pd.Series], verbose=False)->dict:
+def _parse_bathrooms(dataframe:Union[pd.DataFrame,pd.Series], verbose=False)->dict:
     """Converts bathroom text descriptions to floats,
     and returns a dict that can be used in mapping
 
@@ -195,5 +200,3 @@ def _price_to_float(input_string:str, currency:str="$") -> float:
     input_string = input_string.replace(currency,'').replace(' ','').replace(',','')
 
     return float(input_string)
-
-
