@@ -117,18 +117,31 @@ def clean_listings(df_listings:pd.DataFrame)->pd.DataFrame:
     bathroom_mappings = _parse_bathrooms(dataframe=df_listings["bathrooms_text"])
     df_listings_cleaned["bathrooms"] = df_listings_cleaned["bathrooms_text"].replace(to_replace=bathroom_mappings)
 
-    #price to float
+    # price to float
     df_listings_cleaned["price"] = df_listings_cleaned["price"].apply(_price_to_float)
 
-    #cleaning in the "reviews" areas:
+    # cleaning in the "reviews" areas:
     df_listings_cleaned["reviews_per_month"] = df_listings_cleaned["reviews_per_month"].fillna(value=0.0)
     df_listings_cleaned["reviews_per_month"] = df_listings_cleaned["reviews_per_month"].replace(to_replace=["nan","NaN"], value=0.0)
 
-    #reviews features
-    df_listings_cleaned["review_age"] = df_listings_cleaned["last_review"].apply(lambda x:_age_days(x))
+    # host features
+    host_features=["host_response_rate", "host_acceptance_rate"]
+    df_listings_cleaned[host_features] = df_listings_cleaned[host_features].fillna(value=0.0)
 
-    #licenses
-    df_listings_cleaned = df_listings_cleaned.drop(columns="license")
+    df_listings_cleaned["host_response_time"] = df_listings_cleaned["host_response_time"].fillna(value="unknown")
+
+    # reviews features
+    df_listings_cleaned["review_age"] = df_listings_cleaned["last_review"].apply(_age_days)
+
+    review_cols = []
+    for col in df_listings.columns:
+        if ("review_scores" in col) or ("_review" in col):
+            review_cols.append(col)
+    
+    df_listings_cleaned[review_cols] = df_listings_cleaned[review_cols].fillna(value=0.0)
+
+    #other columns to drop
+    df_listings_cleaned = df_listings_cleaned.drop(columns=["license", "calendar_updated"])
 
     return df_listings_cleaned
 
